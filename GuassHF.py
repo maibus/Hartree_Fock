@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import ndimage
 from numpy import inf, nan
-import numpy.pi as pi
+from numpy import pi
 from scipy.integrate import simps
 from math import erf
 from Gauss_integrate import Smat_gauss, Tmat_gauss, Amat_gauss, Qmat_gauss, Rmat_gauss
@@ -25,10 +25,12 @@ basis[0, :] = np.array([0.3696, 0.4166, R[0]])
 basis[1, :] = np.array([0.5881, 0.7739, R[1]])
 
 
-Rmatrix = Rmat_gauss(basis[:, 2], basis[:, 1])
+Rmatrix = Rmat_gauss(basis[:, 2], basis[:, 1], N)
 S = Smat_gauss(basis[:, 2], basis[:, 1], basis[:, 0], N)
 T = Tmat_gauss(basis[:, 2], basis[:, 1], basis[:, 0], N, S)
-A = Amat_gauss(R, Rmatrix, basis[:, 1], N, S)
+A = Amat_gauss(R, Rmatrix, basis[:, 1], N, S, Z)
 Q = Qmat_gauss(Rmatrix, basis[:, 1], basis[:, 0], N, S)
+A[A == nan] = 0
+Q[Q == inf] = 0
 
 

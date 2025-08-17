@@ -2,9 +2,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import ndimage
 from numpy import inf, nan
-import numpy.pi as pi
+from numpy import pi
 from scipy.integrate import simps
 from math import erf
+from scipy import special
+
 
 e = 1.602*10**(-19)
 hbar = 6.626*10 ** (-34) * 1 / (2 * np.pi)
@@ -31,13 +33,14 @@ def Tmat_gauss(R, alpha, C, N, Smat):
     return out_matrix
             
 
-def Amat_gauss(R, Rmat, alpha, N, Smat):
+def Amat_gauss(R, Rmat, alpha, N, Smat, Z):
     out_matrix = np.zeros([N, N])
-    for n in range(N):
-        for m in range(N):
-            prefactor = -Smat[n, m] / np.abs(R[n, m] - R)
-            main = np.sqrt(alpha[n] + alpha[m]) * np.abs(R[n, m] - R)
-            out_matrix[n, m] = prefactor * erf(main)
+    for a in range(np.size(Z)):
+        for n in range(N):
+            for m in range(N):
+                prefactor = -Smat[n, m] / np.abs(Rmat[n, m] - R[a])
+                main = np.sqrt(alpha[n] + alpha[m]) * np.abs(Rmat[n, m] - R[a])
+                out_matrix[n, m] = prefactor * special.erf(main) * Z[a]
     return out_matrix
 
 
@@ -50,12 +53,12 @@ def Qmat_gauss(Rmat, alpha, C, N, Smat):
                     prefactor = Smat[m, o] * Smat[n, p] / np.abs(Rmat[m, o] - Rmat[n, p])
                     p1 = alpha[m] + alpha[o]
                     p2 = alpha[n] + alpha[p]
-                    main = p1 * p2 / (p1 + p2) * np.abs(R[m, o] - R[m, p])
-                    out_matrix[m, n, o, p] = prefactor * erf(main) * C[m] * C[n] * C[o] * C[p]
+                    main = p1 * p2 / (p1 + p2) * np.abs(Rmat[m, o] - Rmat[m, p])
+                    out_matrix[m, n, o, p] = prefactor * special.erf(main) * C[m] * C[n] * C[o] * C[p]
     return out_matrix
 
 
-def Rmat_gauss(R, alpha):
+def Rmat_gauss(R, alpha, N):
     out_matrix = np.zeros([N, N])
     for m in range(N):
         for n in range(N):
