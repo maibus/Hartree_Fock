@@ -49,18 +49,22 @@ def Amat_gauss(R, Rmat, alpha, N, Smat, Z):
     return out_matrix
 
 
-def Qmat_gauss(Rmat, alpha, C, N, Smat):
+def Qmat_gauss(R, alpha, C, N):
     out_matrix = np.zeros([N, N, N, N])
     for m in range(N):
         for n in range(N):
+            gamma_1 = alpha[m] + alpha[n]
+            mu_1 = (alpha[m] * R[m] + alpha[n] * R[n]) / gamma_1
+            C_1 = C[m] * C[n] * np.exp(-alpha[m]*alpha[n] / gamma_1 * (R[n] - R[m]) ** 2)
             for o in range(N):
                 for p in range(N):
-                    dx = 10 ** (-10)  # for /0 prevention
-                    prefactor = Smat[m, o] * Smat[n, p] / np.abs(Rmat[m, o] - Rmat[n, p] + dx)
-                    p1 = alpha[m] + alpha[o]
-                    p2 = alpha[n] + alpha[p]
-                    main = p1 * p2 / (p1 + p2) * np.abs(Rmat[m, o] - Rmat[n, p])
-                    out_matrix[m, n, o, p] = prefactor * special.erf(main) * C[m] * C[n] * C[o] * C[p]
+                    gamma_2 = alpha[o] + alpha[p]
+                    mu_2 = (alpha[o] * R[o] + alpha[p] * R[p]) / gamma_2
+                    C_2 = C[o] * C[p] * np.exp(-alpha[o]*alpha[p] / gamma_2 * (R[o] - R[p]) ** 2)
+                    alpha_tot = (gamma_1 * gamma_2) / (gamma_1 + gamma_2)
+                    R_12 = (gamma_1 * mu_1 + gamma_2 * mu_2) / (gamma_1 + gamma_2)
+                    out_matrix[m, n, o, p] = C_1 * C_2 * 2 * pi ** (5/2) / (gamma_1 * gamma_2 * np.sqrt(gamma_1 + gamma_2)) * boys_0(alpha_tot * (mu_1 - mu_2) ** 2 + 10 ** (-10))
+                    
     return out_matrix
 
 

@@ -30,7 +30,7 @@ Rmatrix = Rmat_gauss(basis[:, 2], basis[:, 1], N)
 S = Smat_gauss(basis[:, 2], basis[:, 1], basis[:, 0], N)
 T = Tmat_gauss(basis[:, 2], basis[:, 1], basis[:, 0], N, S)
 A = Amat_gauss(R, Rmatrix, basis[:, 1], N, S, Z)
-Q = Qmat_gauss(Rmatrix, basis[:, 1], basis[:, 0], N, S)
+Q = Qmat_gauss(R, basis[:, 1], basis[:, 0], N)
 print(Q)
 print("hi")
 
