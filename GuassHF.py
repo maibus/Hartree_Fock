@@ -31,14 +31,23 @@ S = Smat_gauss(basis[:, 2], basis[:, 1], basis[:, 0], N)
 T = Tmat_gauss(basis[:, 2], basis[:, 1], basis[:, 0], N, S)
 A = Amat_gauss(R, Rmatrix, basis[:, 1], N, S, Z)
 Q = Qmat_gauss(R, basis[:, 1], basis[:, 0], N)
-print(Q)
-print("hi")
+
+
+def internuclear(R, Z):
+    E = 0
+    N = np.size(Z)
+    nums = np.arange(N)
+    for n in range(N):
+        E += Z[n] * np.sum(Z * (1 - (nums == n)) / np.abs(R[n] - R + 10**(-10)))
+    return E*0.5
+
 
 def getP(C):
     P_out = np.empty_like(C)
-    for m in range(np.shape(C)[0]):
-        for n in range(np.shape(C)[0]):
-            P_out[m, n] = 2 * np.sum(C[m, :] * np.conjugate(C[n, :]))
+    for a in range(1):  # how do we make this general
+        for m in range(np.shape(C)[0]):
+            for n in range(np.shape(C)[0]):
+                P_out[m, n] = 2 * C[m, a] * np.conjugate(C[n, a])  # probably remove conjugate
     return P_out
     
 
@@ -46,15 +55,24 @@ def matmul4d(A, B, N):
     output = np.zeros([N, N])
     for m in range(N):
         for n in range(N):
-            output[m, n] = np.sum(np.sum(A * B[m, n, :, :]))
+            output[m, n] = np.sum(A * B[m, n, :, :])
     return output
+
+def currentenergy(D, Hcore, F, dim): # Calculate energy at iteration
+    EN = 0
+    for mu in range(0, dim):
+        for nu in range(0, dim):
+            EN += 0.5*D[mu,nu]*(Hcore[mu,nu] + F[mu,nu])
+            
+    return EN
 
 
 def solver(N, S, T, A, Q):
-    C = np.random.random([N, N])
+    C = np.zeros([N, N])
     P = getP(C)
     diff = 1
-    thresh = 0.0001
+    thresh = 0.0000001
+    Enuc = internuclear(R, Z)
 
     Sval, Svec = np.linalg.eigh(S)  # from Adam Baskerville
     Sval_inverseroot = np.diag(Sval**(-0.5))
@@ -63,21 +81,20 @@ def solver(N, S, T, A, Q):
     while diff > thresh:
         h = T + A
         J = matmul4d(P, np.transpose(Q, (0, 1, 3, 2)), N)
-        K = 0.5 * matmul4d(P, np.transpose(Q, (0, 3, 1, 2)), N)
+        K = -0.5 * matmul4d(P, np.transpose(Q, (0,2,3,1)), N)
 
         H = h + J + K
-        print(A)
 
         H_prime = np.matmul(X.T, np.matmul(H, X))
         epsilon, C_prime = np.linalg.eigh(H_prime)
 
         C = np.matmul(X, C_prime)
-        print(C)
         P_old = P
         P = getP(C)
         diff = np.sum(np.sum((P_old - P) ** 2))
-        print(diff)
-    print(np.sum(epsilon))
+        energy = 0.5 * np.sum(np.dot(P, h + H))
+        print(0.5 * np.sum(P * (h + H)) + Enuc, "E")
+
 
 solver(N, S, T, A, Q)
         
