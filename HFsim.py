@@ -7,13 +7,7 @@ from scipy.integrate import simps
 from math import erf
 from Gauss_integrate import Smat_gauss, Tmat_gauss, Amat_gauss, Qmat_gauss, Rmat_gauss
 from GuassHF import Hartree_Fock
-
-e = 1.602*10**(-19)
-hbar = 6.626*10 ** (-34) * 1 / (2 * np.pi)
-m_e = 9.109 * 10 ** (-31)
-m_p = 1.673 * 10 ** (-27)
-epsilon_0 = 8.854 * 10 ** (-12)
-a_0 = (4 * np.pi * epsilon_0 * hbar ** 2) / (m_e * e ** 2)
+from constants import a_0
 
 R = np.array([0, 0.8 * 10 ** (-10)])  # initialise positions of ions
 R /= a_0  # put into units of Bohr radii
