@@ -16,54 +16,70 @@ def boys_0(x):
     return np.sqrt(pi) / (2 * np.sqrt(x)) * special.erf(1 * np.sqrt(x))
 
 
-def Smat_gauss(R, alpha, C, N):
+def S_element(C1, alpha1, R1, C2, alpha2, R2):
+    prefactor = (pi / (alpha1 + alpha2))** (3/2)
+    exponential = -alpha1 * alpha2 / (alpha1 + alpha2) * (R1 - R2) ** 2
+    return prefactor * np.exp(exponential) * C1 * C2
+
+def T_element(alpha1, R1, alpha2, R2, S):
+    X = alpha1 * alpha2 / (alpha1 + alpha2)  # just a repeated part
+    prefactor = 0.5 * X * S
+    main = (6 - 4 * X * (R2 - R1) ** 2)
+    return prefactor * main# * C[n] * C[m]
+
+def A_element(alpha1, R1, alpha2, R2, mu, S, Z, R_a):
+    R_a += 10 ** (-10)  # to overcome /0 errors, temporary fix
+    prefactor = -S / np.abs(mu - R_a)
+    main = np.sqrt(alpha1 + alpha2) * np.abs(mu - R_a)
+    return prefactor * special.erf(main) * Z
+
+def Q_element(C1, C2, C3, C4, alpha1, alpha2, alpha3, alpha4, R1, R2, R3, R4):
+    gamma_1 = alpha1 + alpha2
+    mu_1 = (alpha1 * R1 + alpha2 * R2) / gamma_1
+    C_1 = C1 * C2 * np.exp(-alpha1*alpha2 / gamma_1 * (R2 - R1) ** 2)
+    gamma_2 = alpha3 + alpha4
+    mu_2 = (alpha3 * R3 + alpha4 * R4) / gamma_2
+    C_2 = C3 * C4 * np.exp(-alpha3 * alpha4 / gamma_2 * (R3 - R4) ** 2)
+    alpha_tot = (gamma_1 * gamma_2) / (gamma_1 + gamma_2)  #
+    R_12 = (gamma_1 * mu_1 + gamma_2 * mu_2) / (gamma_1 + gamma_2)  #
+    return C_1 * C_2 * 2 * pi ** (5/2) / (gamma_1 * gamma_2 * np.sqrt(gamma_1 + gamma_2)) * boys_0(alpha_tot * (mu_1 - mu_2) ** 2 + 10 ** (-10))  #
+   
+
+
+def Smat_gauss(basis, N):
     out_matrix = np.zeros([N, N])
     for n in range(N):
         for m in range(N):
-            prefactor = (pi / (alpha[n] + alpha[m]))** (3/2)
-            exponential = -alpha[n] * alpha[m] / (alpha[n] + alpha[m]) * (R[n] - R[m]) ** 2
-            out_matrix[n, m] = prefactor * np.exp(exponential) * C[n] * C[m]
+            out_matrix[n, m] = S_element(basis[n, 0], basis[n, 1], basis[n, 2], basis[m, 0], basis[m, 1], basis[m, 2])
     return out_matrix
 
 
-def Tmat_gauss(R, alpha, C, N, Smat):
+def Tmat_gauss(basis, N, Smat):
     out_matrix = np.zeros([N, N])
     for n in range(N):
         for m in range(N):
-            X = alpha[n] * alpha[m] / (alpha[n] + alpha[m])  # just a repeated part
-            prefactor = 0.5 * X * Smat[n, m]
-            main = (6 - 4 * X * (R[m] - R[n]) ** 2)
-            out_matrix[n, m] = prefactor * main# * C[n] * C[m]
+            out_matrix[n, m] = T_element(basis[n, 1], basis[n, 2], basis[m, 1], basis[m, 2], Smat[n, m])
     return out_matrix
             
 
-def Amat_gauss(R, Rmat, alpha, N, Smat, Z):
+def Amat_gauss(basis, R_a, Rmat, N, Smat, Z):
     out_matrix = np.zeros([N, N])
     for a in range(np.size(Z)):
         for n in range(N):
             for m in range(N):
-                R_a = R[a] + 10 ** (-10)  # to overcome /0 errors, temporary fix
-                prefactor = -Smat[n, m] / np.abs(Rmat[n, m] - R_a)
-                main = np.sqrt(alpha[n] + alpha[m]) * np.abs(Rmat[n, m] - R_a)
-                out_matrix[n, m] += prefactor * special.erf(main) * Z[a]
+                out_matrix[n, m] += A_element(basis[n, 1], basis[n, 2], basis[m, 1], basis[m, 2], Rmat[n, m], Smat[n, m], Z[a], R_a[a])
     return out_matrix
 
 
-def Qmat_gauss(R, alpha, C, N):
+def Qmat_gauss(basis, N):
     out_matrix = np.zeros([N, N, N, N])
     for m in range(N):
         for n in range(N):
-            gamma_1 = alpha[m] + alpha[n]
-            mu_1 = (alpha[m] * R[m] + alpha[n] * R[n]) / gamma_1
-            C_1 = C[m] * C[n] * np.exp(-alpha[m]*alpha[n] / gamma_1 * (R[n] - R[m]) ** 2)
             for o in range(N):
                 for p in range(N):
-                    gamma_2 = alpha[o] + alpha[p]
-                    mu_2 = (alpha[o] * R[o] + alpha[p] * R[p]) / gamma_2
-                    C_2 = C[o] * C[p] * np.exp(-alpha[o]*alpha[p] / gamma_2 * (R[o] - R[p]) ** 2)
-                    alpha_tot = (gamma_1 * gamma_2) / (gamma_1 + gamma_2)
-                    R_12 = (gamma_1 * mu_1 + gamma_2 * mu_2) / (gamma_1 + gamma_2)
-                    out_matrix[m, n, o, p] = C_1 * C_2 * 2 * pi ** (5/2) / (gamma_1 * gamma_2 * np.sqrt(gamma_1 + gamma_2)) * boys_0(alpha_tot * (mu_1 - mu_2) ** 2 + 10 ** (-10))
+                    out_matrix[m, n, o, p] = Q_element(basis[m, 0], basis[n, 0], basis[o, 0], basis[p, 0],
+                                                       basis[m, 1], basis[n, 1], basis[o, 1], basis[p, 1],
+                                                       basis[m, 2], basis[n, 2], basis[o, 2], basis[p, 2])
                     
     return out_matrix
 

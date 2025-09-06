@@ -22,6 +22,8 @@ def getS(basis, r, dr):
             f1 = basis[m, :]
             f2 = basis[n, :]
             integrand = f1 * f2
+            plt.plot(integrand)
+            plt.show()
             J = 4 * np.pi * r ** 2
             output[m, n] = simps(J * integrand, r)
     return output

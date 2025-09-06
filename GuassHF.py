@@ -6,6 +6,7 @@ from numpy import pi
 from scipy.integrate import simps
 from math import erf
 from Gauss_integrate import Smat_gauss, Tmat_gauss, Amat_gauss, Qmat_gauss, Rmat_gauss
+from Rad_integrate import getT
 
 
 class Hartree_Fock:
@@ -29,10 +30,10 @@ class Hartree_Fock:
 
     def get_staq(self, basis):
         self.Rmatrix = Rmat_gauss(basis[:, 2], basis[:, 1], self.N)
-        self.S = Smat_gauss(basis[:, 2], basis[:, 1], basis[:, 0], self.N)
-        self.T = Tmat_gauss(basis[:, 2], basis[:, 1], basis[:, 0], self.N, self.S)
-        self.A = Amat_gauss(self.R, self.Rmatrix, basis[:, 1], self.N, self.S, self.Z)
-        self.Q = Qmat_gauss(self.R, basis[:, 1], basis[:, 0], self.N)
+        self.S = Smat_gauss(basis, self.N)
+        self.T = Tmat_gauss(basis, self.N, self.S)
+        self.A = Amat_gauss(basis, self.R, self.Rmatrix, self.N, self.S, self.Z)
+        self.Q = Qmat_gauss(basis, self.N)
 
     def internuclear(self, R, Z):
         E = 0

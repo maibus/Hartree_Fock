@@ -22,3 +22,5 @@ basis[1, :] = np.array([0.5881, 0.7739, R[1]])
 HFsolver = Hartree_Fock(Z, R, N, molecule = True)
 HFsolver.get_staq(basis)
 HFsolver.solve(verbose = True, thresh = 0.0000001)
+
+
