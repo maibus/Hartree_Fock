@@ -46,49 +46,62 @@ def Q_element(C1, C2, C3, C4, alpha1, alpha2, alpha3, alpha4, R1, R2, R3, R4):
    
 
 
-def Smat_gauss(basis, N):
-    out_matrix = np.zeros([N, N])
+def Smat_gauss(basis, N, M):
+    out_matrix = np.zeros([N, N, M, M])
+    
     for n in range(N):
         for m in range(N):
-            out_matrix[n, m] = S_element(basis[n, 0], basis[n, 1], basis[n, 2], basis[m, 0], basis[m, 1], basis[m, 2])
+            for i in range(M):
+                for j in range(M):
+                    out_matrix[n, m, i, j] = S_element(basis[n, i, 0], basis[n, i, 1], basis[n, i, 2], basis[m, j, 0], basis[m, j, 1], basis[m, j, 2])
     return out_matrix
 
 
-def Tmat_gauss(basis, N, Smat):
+def Tmat_gauss(basis, N, M, Smat):
     out_matrix = np.zeros([N, N])
     for n in range(N):
         for m in range(N):
-            out_matrix[n, m] = T_element(basis[n, 1], basis[n, 2], basis[m, 1], basis[m, 2], Smat[n, m])
+            for i in range(M):
+                for j in range(M):
+                    out_matrix[n, m] += T_element(basis[n, i, 1], basis[n, i, 2], basis[m, j, 1], basis[m, j, 2], Smat[n, m, i, j])
     return out_matrix
             
 
-def Amat_gauss(basis, R_a, Rmat, N, Smat, Z):
+def Amat_gauss(basis, R_a, Rmat, N, M, Smat, Z):
     out_matrix = np.zeros([N, N])
     for a in range(np.size(Z)):
         for n in range(N):
             for m in range(N):
-                out_matrix[n, m] += A_element(basis[n, 1], basis[n, 2], basis[m, 1], basis[m, 2], Rmat[n, m], Smat[n, m], Z[a], R_a[a])
+                for i in range(M):
+                    for j in range(M):
+                        out_matrix[n, m] += A_element(basis[n, i, 1], basis[n, i, 2], basis[m, j, 1], basis[m, j, 2], Rmat[n, m, i, j], Smat[n, m, i, j], Z[a], R_a[a])
     return out_matrix
 
 
-def Qmat_gauss(basis, N):
+def Qmat_gauss(basis, N, M):
     out_matrix = np.zeros([N, N, N, N])
     for m in range(N):
         for n in range(N):
             for o in range(N):
                 for p in range(N):
-                    out_matrix[m, n, o, p] = Q_element(basis[m, 0], basis[n, 0], basis[o, 0], basis[p, 0],
-                                                       basis[m, 1], basis[n, 1], basis[o, 1], basis[p, 1],
-                                                       basis[m, 2], basis[n, 2], basis[o, 2], basis[p, 2])
+                    for i in range(M):
+                        for j in range(M):
+                            for k in range(M):
+                                for l in range(M):
+                                    out_matrix[m, n, o, p] += Q_element(basis[m, i, 0], basis[n, j, 0], basis[o, k, 0], basis[p, l, 0],
+                                                                       basis[m, i, 1], basis[n, j, 1], basis[o, k, 1], basis[p, l, 1],
+                                                                       basis[m, i, 2], basis[n, j, 2], basis[o, k, 2], basis[p, l, 2])
                     
     return out_matrix
 
 
-def Rmat_gauss(R, alpha, N):
-    out_matrix = np.zeros([N, N])
+def Rmat_gauss(basis, N, M):
+    out_matrix = np.zeros([N, N, M, M])
     for m in range(N):
         for n in range(N):
-            out_matrix[m, n] = (alpha[m] * R[m] + alpha[n] * R[n]) / (alpha[m] + alpha[n])
+            for i in range(M):
+                for j in range(M):
+                    out_matrix[m, n, i, j] = (basis[m, i, 1] * basis[m, i, 2] + basis[n, j, 1] * basis[n, j, 2]) / (basis[m, i, 1] + basis[n, j, 1])
     return out_matrix
 
 

@@ -29,11 +29,13 @@ class Hartree_Fock:
         #self.R /= self.a_0  # puts R in units of a_0
 
     def get_staq(self, basis):
-        self.Rmatrix = Rmat_gauss(basis[:, 2], basis[:, 1], self.N)
-        self.S = Smat_gauss(basis, self.N)
-        self.T = Tmat_gauss(basis, self.N, self.S)
-        self.A = Amat_gauss(basis, self.R, self.Rmatrix, self.N, self.S, self.Z)
-        self.Q = Qmat_gauss(basis, self.N)
+        self.M = np.shape(basis)[1]
+        self.Rmatrix = Rmat_gauss(basis, self.N, self.M)
+        self.Stens = Smat_gauss(basis, self.N, self.M)  # 4D tensor
+        self.S = np.sum(np.sum(self.Stens, axis=2), axis=2)
+        self.T = Tmat_gauss(basis, self.N, self.M, self.Stens)
+        self.A = Amat_gauss(basis, self.R, self.Rmatrix, self.N, self.M, self.Stens, self.Z)
+        self.Q = Qmat_gauss(basis, self.N, self.M)
 
     def internuclear(self, R, Z):
         E = 0
@@ -47,7 +49,7 @@ class Hartree_Fock:
         P_out = np.empty_like(C)
         for a in range(1):  # how do we make this general
             for m in range(np.shape(C)[0]):
-                for n in range(np.shape(C)[0]):
+                for n in range(np.shape(C)[1]):
                     P_out[m, n] = 2 * C[m, a] * np.conjugate(C[n, a])  # probably remove conjugate
         return P_out    
 
