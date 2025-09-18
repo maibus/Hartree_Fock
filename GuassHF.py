@@ -58,11 +58,23 @@ class Hartree_Fock:
         for m in range(N):
             for n in range(N):
                 output[m, n] = np.sum(A * B[m, n, :, :])
-        return output    
+        return output
+
+    def plotwavefuncs(self, basis):
+        r = np.linspace(0, 5, 500)
+        for m in range(self.N):
+            F = np.zeros(500)
+            for n in range(self.N):
+                for o in range(self.M):
+                    F += self.C[n, m] * basis[n, o, 0] * np.exp(-basis[n, o, 1] * (r - basis[n, o, 2]) ** 2)
+            plt.plot(r, F**2 * r**2, label = "orbital " + str(m + 1))
+        plt.legend()
+        plt.xlabel("r/a_0")
+        plt.show()
 
     def solve(self, verbose, thresh):
-        C = np.zeros([self.N, self.N])
-        P = self.getP(C)
+        self.C = np.zeros([self.N, self.N])
+        P = self.getP(self.C)
         diff = 1
         Enuc = 0
         if self.molecule:
@@ -82,9 +94,9 @@ class Hartree_Fock:
             H_prime = np.matmul(X.T, np.matmul(H, X))
             epsilon, C_prime = np.linalg.eigh(H_prime)
 
-            C = np.matmul(X, C_prime)
+            self.C = np.matmul(X, C_prime)
             P_old = P
-            P = self.getP(C)
+            P = self.getP(self.C)
             diff = np.sum(np.sum((P_old - P) ** 2))
             energy = 0.5 * np.sum(np.dot(P, h + H))
             if verbose:
